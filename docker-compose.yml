@@ -1,0 +1,88 @@
+services:
+  router:
+    cap_add:
+      - NET_BIND_SERVICE
+    cap_drop:
+      - ALL
+    container_name: composed-haproxy
+    image: haproxy:lts-alpine
+    init: true
+    ports:
+      - "443:443"
+    pull_policy: always
+    restart: on-failure
+    ulimits:
+      nproc: 16384
+      nofile:
+        soft: 16384
+        hard: 16384
+      memlock:
+        soft: 8192
+        hard: 16384
+    volumes:
+      - type: bind
+        source: haproxy.cfg
+        target: /usr/local/etc/haproxy/haproxy.cfg
+        read_only: true
+      - type: bind
+        source: ffdhe2048.txt
+        target: /usr/local/etc/haproxy/dhparam.pem
+        read_only: true
+  mmproxy-mtg:
+    build: ./mmproxy
+    cap_add:
+    #   - NET_ADMIN
+    # cap_drop:
+      - ALL
+    command: [ "-l", "0.0.0.0:45330", "-4", "mtg:45330", "-v", "1" ]
+    container_name: composed-mmproxy-mtg
+    depends_on:
+      - router
+    image: mmproxy
+    init: true
+    restart: on-failure
+    sysctls:
+        # https://github.com/cloudflare/mmproxy/blob/ac4b6083dc180758b3caf15b64a157f8ce5199c7/README.md#how-mmproxy-works
+      - net.ipv4.conf.all.route_localnet=1
+      - net.ipv4.conf.default.route_localnet=1
+      - net.ipv4.conf.eth0.route_localnet=1
+        # mitigate TIME-WAIT Assassination hazards in TCP
+      - net.ipv4.tcp_rfc1337=1
+        # SACK is commonly exploited and rarely used
+      - net.ipv4.tcp_sack=0
+      - net.ipv4.tcp_dsack=0
+      - net.ipv4.tcp_fack=0
+        # SSR could impact TCP's performance on a fixed-speed network (e.g., wired)
+      - net.ipv4.tcp_slow_start_after_idle=0
+    ulimits:
+      nproc: 16384
+      nofile:
+        soft: 16384
+        hard: 16384
+      memlock:
+        soft: 8192
+        hard: 16384
+  mtg:
+    cap_drop:
+      - ALL
+    container_name: composed-mtg
+    depends_on:
+      - router
+      - mmproxy-mtg
+    image: ghcr.io/9seconds/mtg:2
+    init: true
+    pull_policy: always
+    restart: on-failure
+    ulimits:
+      nproc: 16384
+      nofile:
+        soft: 16384
+        hard: 16384
+      memlock:
+        soft: 8192
+        hard: 16384
+    volumes:
+      - type: bind
+        source: mtg.toml
+        target: /config.toml
+        read_only: true
