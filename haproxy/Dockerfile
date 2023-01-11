@@ -6,4 +6,7 @@ RUN apk update; apk --no-progress --no-cache add \
     iptables iproute2; \
     apk --no-progress --no-cache upgrade; \
     rm -rf /var/cache/apk/*;
-USER haproxy
+COPY --link --chmod=755 ./entrypoint.sh /
+
+# USER haproxy
+ENTRYPOINT [ "/entrypoint.sh" ]
