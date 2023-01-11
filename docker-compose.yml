@@ -34,12 +34,13 @@ services:
         target: /usr/local/etc/haproxy/dhparam.pem
         read_only: true
   mtg:
+    build: ./mtg/
     cap_drop:
       - ALL
     container_name: composed-mtg
     depends_on:
       - router
-    image: ghcr.io/9seconds/mtg:2
+    # image: ghcr.io/9seconds/mtg:2
     init: true
     pull_policy: always
     restart: on-failure
