@@ -4,6 +4,7 @@ services:
     cap_add:
       - NET_ADMIN
       - NET_BIND_SERVICE
+      - NET_RAW
     cap_drop:
       - ALL
     container_name: composed-haproxy
@@ -16,6 +17,17 @@ services:
         mode: host
     pull_policy: always
     restart: on-failure
+    sysctls:
+        # https://gist.github.com/mhofman/a01df56480b3791d526b77dbebef43a2#haproxy-transparent-support
+      - net.ipv4.ip_nonlocal_bind=1
+        # mitigate TIME-WAIT Assassination hazards in TCP
+      - net.ipv4.tcp_rfc1337=1
+        # SACK is commonly exploited and rarely used
+      - net.ipv4.tcp_sack=0
+      - net.ipv4.tcp_dsack=0
+      - net.ipv4.tcp_fack=0
+        # SSR could impact TCP's performance on a fixed-speed network (e.g., wired)
+      - net.ipv4.tcp_slow_start_after_idle=0
     ulimits:
       nproc: 16384
       nofile:
