@@ -15,7 +15,6 @@ services:
         protocol: tcp
         mode: host
     pull_policy: always
-    read_only: true
     restart: on-failure
     ulimits:
       nproc: 16384
