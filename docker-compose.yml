@@ -18,6 +18,12 @@ services:
     pull_policy: always
     restart: on-failure
     sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv6.conf.default.forwarding=1
+      - net.ipv6.conf.all.forwarding=1
+      # - net.ipv4.conf.default.rp_filter=0
+      # - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
         # https://gist.github.com/mhofman/a01df56480b3791d526b77dbebef43a2#haproxy-transparent-support
       - net.ipv4.ip_nonlocal_bind=1
         # mitigate TIME-WAIT Assassination hazards in TCP
