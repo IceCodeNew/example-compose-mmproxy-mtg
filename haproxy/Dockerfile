@@ -15,7 +15,6 @@ RUN mkdir -p '/etc/dpkg/dpkg.cfg.d' '/etc/apt/apt.conf.d' \
     && rm -rf /var/cache/apt/* \
     && rm -rf /var/lib/apt/lists/*;
 
-COPY --link --chmod=755 ./entrypoint.sh /
+COPY --link --chmod=755 ./entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 # USER haproxy
-ENTRYPOINT [ "/entrypoint.sh" ]
