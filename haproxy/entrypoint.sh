@@ -1,12 +1,8 @@
 #!/bin/sh
 
 # Mark incoming packets matching an existing local socket
-iptables -t mangle -N DIVERT
-iptables -t mangle -A DIVERT -j MARK --set-mark 1
-iptables -t mangle -A DIVERT -j ACCEPT
-
-iptables -t mangle -A PREROUTING -m socket -j DIVERT
-iptables -t mangle -A PREROUTING -p tcp --dport 443 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 10443 --on-ip 127.0.0.1
+iptables -t mangle -A PREROUTING -p tcp -m socket -j MARK --set-mark 1
+iptables -t nat -A POSTROUTING -j SNAT --to-source "$(ip --brief a | grep -F 'eth0' | awk '{print $3;}' | sed -E 's|\/[0-9]+||')"
 
 # Redirect all marked packets for local processing, i.e. to the open, transparent socket
 ip rule add fwmark 1 lookup 100
