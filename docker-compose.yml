@@ -5,10 +5,15 @@ services:
     cap_drop:
       - ALL
     container_name: composed-haproxy
+    depends_on:
+      - mmproxy-mtg
     image: haproxy:lts-alpine
     init: true
     ports:
-      - "443:443"
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
     pull_policy: always
     restart: on-failure
     ulimits:
@@ -34,14 +39,14 @@ services:
     #   - NET_ADMIN
     # cap_drop:
       - ALL
-    command: [ "-l", "0.0.0.0:45330", "-4", "mtg:45330", "-v", "1" ]
+    command: [ "-l", "0.0.0.0:55330", "-4", "127.0.0.1:45330", "-mark", "123", "-v", "1" ]
     container_name: composed-mmproxy-mtg
-    depends_on:
-      - router
     image: mmproxy
     init: true
     restart: on-failure
     sysctls:
+        # https://gist.github.com/mhofman/a01df56480b3791d526b77dbebef43a2#haproxy-transparent-support
+      - net.ipv4.ip_nonlocal_bind=1
         # https://github.com/cloudflare/mmproxy/blob/ac4b6083dc180758b3caf15b64a157f8ce5199c7/README.md#how-mmproxy-works
       - net.ipv4.conf.all.route_localnet=1
       - net.ipv4.conf.default.route_localnet=1
@@ -67,10 +72,10 @@ services:
       - ALL
     container_name: composed-mtg
     depends_on:
-      - router
       - mmproxy-mtg
     image: ghcr.io/9seconds/mtg:2
     init: true
+    network_mode: "service:mmproxy-mtg"
     pull_policy: always
     restart: on-failure
     ulimits:
